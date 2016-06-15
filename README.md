@@ -1,0 +1,1 @@
+# geany-goto-function-plugin
