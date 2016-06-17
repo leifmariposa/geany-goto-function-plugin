@@ -25,9 +25,6 @@
 
 #define D(x) /*x*/
 
-/*
- * Enter on num key doesn't work if filtered
- */
 
 /**********************************************************************/
 static const char *PLUGIN_NAME = "Goto Function";
@@ -264,6 +261,7 @@ static gboolean callback_key_press(G_GNUC_UNUSED GtkWidget *widget, GdkEventKey 
 	switch(event->keyval)
 	{
 		case 0xff0d: /* GDK_Return */
+		case 0xff8d: /* GDK_KP_Enter */
 		activate_selected_function_and_quit(plugin_data);
 		break;
 	case 65307: /* Escape */
