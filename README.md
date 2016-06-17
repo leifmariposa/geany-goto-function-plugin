@@ -52,4 +52,4 @@ Bug reports and feature requests
 ----------------
 
 To report a bug or ask for a new feature, please use the tracker
-on GitHub: https://github.com/leifmariposa/geany-ctrl-tab-plugin/issues
+on GitHub: https://github.com/leifmariposa/geany-goto-function-plugin/issues
