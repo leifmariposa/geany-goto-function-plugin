@@ -322,6 +322,8 @@ int launch_widget(void)
 	gtk_window_set_title(GTK_WINDOW(plugin_data->main_window), PLUGIN_NAME);
 	gtk_widget_set_size_request(plugin_data->main_window, WINDOW_WIDTH, WINDOW_HEIGHT);
 	gtk_window_set_position(GTK_WINDOW(plugin_data->main_window), GTK_WIN_POS_CENTER);
+	gtk_window_set_modal(GTK_WINDOW(plugin_data->main_window), TRUE);
+	gtk_window_set_transient_for(GTK_WINDOW(plugin_data->main_window), GTK_WINDOW (geany_plugin->geany_data->main_widgets->window));
 	g_signal_connect(plugin_data->main_window, "delete_event", G_CALLBACK(quit_goto_function), plugin_data);
 	g_signal_connect(plugin_data->main_window, "key-press-event", G_CALLBACK(callback_key_press), plugin_data);
 
