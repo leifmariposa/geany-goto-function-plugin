@@ -173,18 +173,18 @@ static int callback_update_visibilty_elements(G_GNUC_UNUSED GtkWidget *widget, s
 static gboolean row_visible(GtkTreeModel *model, GtkTreeIter *iter, gpointer data)
 {
 	struct PLUGIN_DATA *plugin_data = data;
-	gchar *str;
+	gchar *short_name;
 	gboolean visible = FALSE;
 
 	D(log_debug("%s:%s", __FILE__, __FUNCTION__));
 
-	gtk_tree_model_get(model, iter, COL_SHORT_NAME, &str, -1);
+	gtk_tree_model_get(model, iter, COL_SHORT_NAME, &short_name, -1);
 	const gchar *text_value = plugin_data->text_value;
 
-	if (!text_value || g_strcmp0(text_value, "") == 0 || (str && g_str_match_string(text_value, str, TRUE)))
+	if(!text_value || g_strcmp0(text_value, "") == 0 || (short_name && g_str_match_string(text_value, short_name, TRUE)))
 		visible = TRUE;
 
-	g_free(str);
+	g_free(short_name);
 
 	return visible;
 }
@@ -200,22 +200,21 @@ void activate_selected_function_and_quit(struct PLUGIN_DATA *plugin_data)
 	if (path)
 	{
 		GtkTreeIter iter;
-		gtk_tree_model_get_iter(plugin_data->sorted, &iter, path);
+		if(gtk_tree_model_get_iter(plugin_data->sorted, &iter, path))
+		{
+			guint line;
+			gtk_tree_model_get(plugin_data->sorted, &iter, COL_LINE, &line, -1);
+
+			GeanyDocument *doc = document_get_current();
+			if(doc && doc->is_valid)
+			{
+				navqueue_goto_line(doc, doc, line);
+
+				gtk_widget_destroy(plugin_data->main_window);
+				g_free(plugin_data);
+			}
+		}
 		gtk_tree_path_free(path);
-
-		gchar *short_name;
-		guint line;
-		gtk_tree_model_get(plugin_data->sorted, &iter,
-			COL_SHORT_NAME, &short_name,
-			COL_LINE, &line,
-			-1);
-
-		GeanyDocument * doc = document_get_current();
-		if (doc->is_valid)
-			navqueue_goto_line(doc, doc, line);
-
-		gtk_widget_destroy(plugin_data->main_window);
-		g_free(plugin_data);
 	}
 }
 
