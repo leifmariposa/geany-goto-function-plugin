@@ -67,6 +67,8 @@ struct PLUGIN_DATA
 	GtkTreeModel        *filter;
 	GtkTreeModel        *sorted;
 	const gchar         *text_value;
+	GtkWidget           *cancel_button;
+	GtkWidget           *goto_button;
 } PLUGIN_DATA;
 
 
@@ -165,6 +167,8 @@ static int callback_update_visibilty_elements(G_GNUC_UNUSED GtkWidget *widget, s
 
 	select_first_row(plugin_data);
 
+	gtk_widget_set_sensitive(plugin_data->goto_button, filtered_rows > 0);
+
 	return 0;
 }
 
@@ -253,6 +257,16 @@ static void create_tree_view(struct PLUGIN_DATA *plugin_data)
 
 
 /**********************************************************************/
+static void close_plugin(struct PLUGIN_DATA *plugin_data)
+{
+	D(log_debug("%s:%s", __FILE__, __FUNCTION__));
+
+	gtk_widget_destroy(plugin_data->main_window);
+	g_free(plugin_data);
+}
+
+
+/**********************************************************************/
 static gboolean callback_key_press(G_GNUC_UNUSED GtkWidget *widget, GdkEventKey *event, struct PLUGIN_DATA *plugin_data)
 {
 	D(log_debug("%s:%s", __FILE__, __FUNCTION__));
@@ -264,8 +278,7 @@ static gboolean callback_key_press(G_GNUC_UNUSED GtkWidget *widget, GdkEventKey 
 		activate_selected_function_and_quit(plugin_data);
 		break;
 	case 65307: /* Escape */
-		gtk_widget_destroy(plugin_data->main_window);
-		g_free(plugin_data);
+		close_plugin(plugin_data);
 		break;
 	case 0xff54: /* GDK_Down */
 		gtk_widget_grab_focus(plugin_data->tree_view);
@@ -275,6 +288,20 @@ static gboolean callback_key_press(G_GNUC_UNUSED GtkWidget *widget, GdkEventKey 
 	}
 
 	return FALSE;
+}
+
+
+/**********************************************************************/
+static void callback_cancel_button(G_GNUC_UNUSED GtkButton *button, struct PLUGIN_DATA *plugin_data)
+{
+	close_plugin(plugin_data);
+}
+
+
+/**********************************************************************/
+static void callback_goto_button(G_GNUC_UNUSED GtkButton *button, struct PLUGIN_DATA *plugin_data)
+{
+	activate_selected_function_and_quit(plugin_data);
 }
 
 
@@ -324,10 +351,25 @@ int launch_widget(void)
 	g_signal_connect(plugin_data->main_window, "delete_event", G_CALLBACK(quit_goto_function), plugin_data);
 	g_signal_connect(plugin_data->main_window, "key-press-event", G_CALLBACK(callback_key_press), plugin_data);
 
+	/* Buttons */
+	GtkWidget *bbox = gtk_hbutton_box_new();
+	gtk_button_box_set_layout(GTK_BUTTON_BOX(bbox), GTK_BUTTONBOX_END);
+
+	plugin_data->cancel_button = gtk_button_new_with_mnemonic(_("_Cancel"));
+	gtk_container_add(GTK_CONTAINER(bbox), plugin_data->cancel_button);
+	g_signal_connect(plugin_data->cancel_button, "clicked", G_CALLBACK(callback_cancel_button), plugin_data);
+
+	plugin_data->goto_button = gtk_button_new_with_mnemonic(_("_Goto"));
+	gtk_container_add(GTK_CONTAINER(bbox), plugin_data->goto_button);
+	g_signal_connect(plugin_data->goto_button, "clicked", G_CALLBACK(callback_goto_button), plugin_data);
+
+	gtk_table_attach(GTK_TABLE(main_grid), bbox, 0, 1, 2, 3, GTK_EXPAND | GTK_FILL, GTK_SHRINK, 0, 0);
+
 	gtk_container_add(GTK_CONTAINER(plugin_data->main_window), main_grid);
 	gtk_widget_show_all(plugin_data->main_window);
 
 	select_first_row(plugin_data);
+	callback_update_visibilty_elements(NULL, plugin_data);
 
 	return 0;
 }
