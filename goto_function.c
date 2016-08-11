@@ -27,10 +27,11 @@
 
 
 /**********************************************************************/
-static const char *PLUGIN_NAME = "Goto Function";
+static const char *PLUGIN_NAME = "Go to Function";
 static const char *PLUGIN_DESCRIPTION = "Dialog with quick search to quickly goto function in current document";
 static const char *PLUGIN_VERSION = "0.1";
 static const char *PLUGIN_AUTHOR = "Leif Persson <leifmariposa@hotmail.com>";
+static const char *PLUGIN_KEY_NAME = "goto_function";
 static const int   WINDOW_WIDTH = 420;
 static const int   WINDOW_HEIGHT = 500;
 
@@ -129,9 +130,9 @@ static GtkTreeModel* get_files()
 
 /**********************************************************************/
 static gboolean count(G_GNUC_UNUSED GtkTreeModel *model,
-					  G_GNUC_UNUSED GtkTreePath *path,
-					  G_GNUC_UNUSED GtkTreeIter *iter,
-					  gint *no_rows )
+											G_GNUC_UNUSED GtkTreePath *path,
+											G_GNUC_UNUSED GtkTreeIter *iter,
+											gint *no_rows )
 {
 	(*no_rows)++;
 
@@ -149,7 +150,7 @@ void select_first_row(struct PLUGIN_DATA *plugin_data)
 
 
 /**********************************************************************/
-static int callback_update_visibilty_elements(G_GNUC_UNUSED GtkWidget *widget, struct PLUGIN_DATA *plugin_data)
+static int on_update_visibilty_elements(G_GNUC_UNUSED GtkWidget *widget, struct PLUGIN_DATA *plugin_data)
 {
 	D(log_debug("%s:%s", __FILE__, __FUNCTION__));
 
@@ -225,9 +226,9 @@ void activate_selected_function_and_quit(struct PLUGIN_DATA *plugin_data)
 
 /**********************************************************************/
 void view_on_row_activated(G_GNUC_UNUSED GtkTreeView *treeview,
-							G_GNUC_UNUSED GtkTreePath *path,
-							G_GNUC_UNUSED GtkTreeViewColumn *col,
-							gpointer data)
+													 G_GNUC_UNUSED GtkTreePath *path,
+													 G_GNUC_UNUSED GtkTreeViewColumn *col,
+													 gpointer data)
 {
 	struct PLUGIN_DATA *plugin_data = data;
 
@@ -267,7 +268,7 @@ static void close_plugin(struct PLUGIN_DATA *plugin_data)
 
 
 /**********************************************************************/
-static gboolean callback_key_press(G_GNUC_UNUSED GtkWidget *widget, GdkEventKey *event, struct PLUGIN_DATA *plugin_data)
+static gboolean on_key_press(G_GNUC_UNUSED GtkWidget *widget, GdkEventKey *event, struct PLUGIN_DATA *plugin_data)
 {
 	D(log_debug("%s:%s", __FILE__, __FUNCTION__));
 
@@ -292,23 +293,23 @@ static gboolean callback_key_press(G_GNUC_UNUSED GtkWidget *widget, GdkEventKey 
 
 
 /**********************************************************************/
-static void callback_cancel_button(G_GNUC_UNUSED GtkButton *button, struct PLUGIN_DATA *plugin_data)
+static void on_cancel_button(G_GNUC_UNUSED GtkButton *button, struct PLUGIN_DATA *plugin_data)
 {
 	close_plugin(plugin_data);
 }
 
 
 /**********************************************************************/
-static void callback_goto_button(G_GNUC_UNUSED GtkButton *button, struct PLUGIN_DATA *plugin_data)
+static void on_goto_button(G_GNUC_UNUSED GtkButton *button, struct PLUGIN_DATA *plugin_data)
 {
 	activate_selected_function_and_quit(plugin_data);
 }
 
 
 /**********************************************************************/
-static gboolean quit_goto_function(G_GNUC_UNUSED GtkWidget *widget,
-									G_GNUC_UNUSED GdkEvent *event,
-									G_GNUC_UNUSED gpointer   data)
+static gboolean on_quit(G_GNUC_UNUSED GtkWidget *widget,
+											  G_GNUC_UNUSED GdkEvent *event,
+											  G_GNUC_UNUSED gpointer   data)
 {
 	D(log_debug("%s:%s", __FILE__, __FUNCTION__));
 
@@ -335,7 +336,7 @@ int launch_widget(void)
 	gtk_table_set_col_spacings(GTK_TABLE(main_grid), 0);
 
 	plugin_data->text_entry = gtk_entry_new();
-	g_signal_connect(plugin_data->text_entry, "changed", G_CALLBACK(callback_update_visibilty_elements), plugin_data);
+	g_signal_connect(plugin_data->text_entry, "changed", G_CALLBACK(on_update_visibilty_elements), plugin_data);
 	gtk_table_attach(GTK_TABLE(main_grid), plugin_data->text_entry, 0, 1, 0, 1, GTK_EXPAND | GTK_FILL, GTK_SHRINK, 0, 0);
 
 	GtkWidget *scrolled_file_list_window = gtk_scrolled_window_new(NULL,NULL);
@@ -348,8 +349,8 @@ int launch_widget(void)
 	gtk_window_set_position(GTK_WINDOW(plugin_data->main_window), GTK_WIN_POS_CENTER);
 	gtk_window_set_modal(GTK_WINDOW(plugin_data->main_window), TRUE);
 	gtk_window_set_transient_for(GTK_WINDOW(plugin_data->main_window), GTK_WINDOW (geany_plugin->geany_data->main_widgets->window));
-	g_signal_connect(plugin_data->main_window, "delete_event", G_CALLBACK(quit_goto_function), plugin_data);
-	g_signal_connect(plugin_data->main_window, "key-press-event", G_CALLBACK(callback_key_press), plugin_data);
+	g_signal_connect(plugin_data->main_window, "delete_event", G_CALLBACK(on_quit), plugin_data);
+	g_signal_connect(plugin_data->main_window, "key-press-event", G_CALLBACK(on_key_press), plugin_data);
 
 	/* Buttons */
 	GtkWidget *bbox = gtk_hbutton_box_new();
@@ -357,11 +358,11 @@ int launch_widget(void)
 
 	plugin_data->cancel_button = gtk_button_new_with_mnemonic(_("_Cancel"));
 	gtk_container_add(GTK_CONTAINER(bbox), plugin_data->cancel_button);
-	g_signal_connect(plugin_data->cancel_button, "clicked", G_CALLBACK(callback_cancel_button), plugin_data);
+	g_signal_connect(plugin_data->cancel_button, "clicked", G_CALLBACK(on_cancel_button), plugin_data);
 
 	plugin_data->goto_button = gtk_button_new_with_mnemonic(_("_Goto"));
 	gtk_container_add(GTK_CONTAINER(bbox), plugin_data->goto_button);
-	g_signal_connect(plugin_data->goto_button, "clicked", G_CALLBACK(callback_goto_button), plugin_data);
+	g_signal_connect(plugin_data->goto_button, "clicked", G_CALLBACK(on_goto_button), plugin_data);
 
 	gtk_table_attach(GTK_TABLE(main_grid), bbox, 0, 1, 2, 3, GTK_EXPAND | GTK_FILL, GTK_SHRINK, 0, 0);
 
@@ -369,7 +370,7 @@ int launch_widget(void)
 	gtk_widget_show_all(plugin_data->main_window);
 
 	select_first_row(plugin_data);
-	callback_update_visibilty_elements(NULL, plugin_data);
+	on_update_visibilty_elements(NULL, plugin_data);
 
 	return 0;
 }
@@ -394,18 +395,20 @@ static void kb_activate(G_GNUC_UNUSED guint key_id)
 
 
 /**********************************************************************/
-static gboolean ctr_init(GeanyPlugin *plugin, G_GNUC_UNUSED gpointer pdata)
+static gboolean init(GeanyPlugin *plugin, G_GNUC_UNUSED gpointer pdata)
 {
 	D(log_debug("%s:%s", __FILE__, __FUNCTION__));
+
+	GtkWidget* edit_menu = ui_lookup_widget(plugin->geany_data->main_widgets->window, "search1_menu");
 
 	GtkWidget *main_menu_item;
 	/* Create a new menu item and show it */
 	main_menu_item = gtk_menu_item_new_with_mnemonic(PLUGIN_NAME);
 	gtk_widget_show(main_menu_item);
-	gtk_container_add(GTK_CONTAINER(plugin->geany_data->main_widgets->tools_menu), main_menu_item);
+	gtk_container_add(GTK_CONTAINER(edit_menu), main_menu_item);
 
-	GeanyKeyGroup *key_group = plugin_set_key_group(plugin, "goto_function", KB_COUNT, NULL);
-	keybindings_set_item(key_group, KB_GOTO_FUNCTION, kb_activate, 0, 0, "goto_function", PLUGIN_NAME, NULL);
+	GeanyKeyGroup *key_group = plugin_set_key_group(plugin, PLUGIN_KEY_NAME, KB_COUNT, NULL);
+	keybindings_set_item(key_group, KB_GOTO_FUNCTION, kb_activate, 0, 0, PLUGIN_KEY_NAME, PLUGIN_NAME, main_menu_item);
 
 	g_signal_connect(main_menu_item, "activate", G_CALLBACK(item_activate_cb), NULL);
 	geany_plugin_set_data(plugin, main_menu_item, NULL);
@@ -415,7 +418,7 @@ static gboolean ctr_init(GeanyPlugin *plugin, G_GNUC_UNUSED gpointer pdata)
 
 
 /**********************************************************************/
-static void ctr_cleanup(G_GNUC_UNUSED GeanyPlugin *plugin, gpointer pdata)
+static void cleanup(G_GNUC_UNUSED GeanyPlugin *plugin, gpointer pdata)
 {
 	D(log_debug("%s:%s", __FILE__, __FUNCTION__));
 
@@ -435,7 +438,7 @@ void geany_load_module(GeanyPlugin *plugin)
 	plugin->info->description = PLUGIN_DESCRIPTION;
 	plugin->info->version = PLUGIN_VERSION;
 	plugin->info->author = PLUGIN_AUTHOR;
-	plugin->funcs->init = ctr_init;
-	plugin->funcs->cleanup = ctr_cleanup;
+	plugin->funcs->init = init;
+	plugin->funcs->cleanup = cleanup;
 	GEANY_PLUGIN_REGISTER(plugin, 225);
 }
